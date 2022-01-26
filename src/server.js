@@ -17,49 +17,36 @@ const wss = new WebSocket.Server({ server });
 
 const sockets = [];
 
-const broadcastMessage = (message, destination = null) => {
-  sockets.forEach((o) => o?.socket.send(message));
-};
-
-const socketIdBySocket = (socket) => {
-  return sockets.findIndex((e) => e?.socket == socket);
+const broadcastMessage = (message) => {
+  sockets.forEach((o) => o?.send(message));
 };
 
 wss.on("connection", (socket) => {
+  sockets.push(socket);
   socket.on("message", (message) => {
-    const msg = message.toString("utf8");
-    console.log(msg);
-    const index = socketIdBySocket(socket);
-    const nickname = sockets[index]?.nickname;
-    const { type, payload } = JSON.parse(msg);
-    if (type == "chat") {
-      broadcastMessage(`${nickname}[user#${index}] : ${payload}`);
-    }
-    if (type == "nickname") {
-      if (nickname != payload) {
-        if (index >= 0) {
-          sockets[index].nickname = payload;
+    const { type, payload } = JSON.parse(message.toString("utf8"));
+    switch (type) {
+      case "chat":
+        broadcastMessage(`${socket.nickname}[user#${socket.id}] : ${payload}`);
+        break;
+      case "nickname":
+        if (!socket.nickname) {
+          socket.id = Math.random().toString(36).substring(7);
+          broadcastMessage(`${payload}[user#${socket.id}] Connected.`);
+        } else if (socket.nickname != payload) {
           broadcastMessage(
-            `${nickname}[user#${index}] Changed the nickname to ${payload}`
+            `${socket.nickname}[user#${socket.id}] Changed the nickname to ${payload}`
           );
-        } else {
-          sockets.push({ nickname: payload, socket: socket });
-          broadcastMessage(`${payload}[user#${sockets.length - 1}] Connected!`);
         }
-      }
+        socket.nickname = payload;
     }
   });
   socket.on("close", () => {
-    const index = socketIdBySocket(socket);
-    const nickname = sockets[index]?.nickname;
-    sockets[index] = null;
+    const nickname = socket.nickname;
+    sockets.splice(socketIdBySocket(socket), 1);
     console.log(`[socket: server] ${nickname} closed.`);
-    broadcastMessage(`${nickname}[user#${index}] Disconnected.`);
+    broadcastMessage(`${nickname}[user#${socket.id}] Disconnected.`);
   });
-});
-
-wss.on("listening", (socket) => {
-  console.log(socket);
 });
 
 server.listen(3000, handleListen);
