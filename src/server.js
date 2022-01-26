@@ -13,8 +13,49 @@ app.get("/*", (_, res) => res.redirect("/"));
 const httpServer = http.createServer(app);
 const io = SocketIO(httpServer);
 
+const publicRooms = () => {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = io;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+};
+
+const RoomUsersCount = (room) => {
+  return [...io.sockets.adapter.rooms.get(room).values()];
+};
+
 io.on("connection", (socket) => {
-  console.log(socket);
+  socket.onAny((event) => {
+    console.log(publicRooms());
+    publicRooms().forEach((room) => console.log(RoomUsersCount(room).length));
+    console.log(`Socket Event : ${event}`);
+  });
+  socket.on("enter_room", (roomName, nickname, callback) => {
+    socket.join(roomName);
+    socket.data.nickname = nickname;
+    callback();
+    socket.to(roomName).emit("get_message", `${socket.data.nickname} Joined`);
+    socket.to(roomName).emit("count", RoomUsersCount(roomName));
+    socket.emit("count", RoomUsersCount(roomName));
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => {
+      socket.to(room).emit("get_message", `${socket.data.nickname} Leaved`);
+    });
+  });
+  socket.on("send_message", (message, room, callback) => {
+    socket.to(room).emit("get_message", `${socket.data.nickname}: ${message}`);
+    socket.to(room).emit("count", RoomUsersCount(room));
+    callback();
+  });
 });
 
 /*

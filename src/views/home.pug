@@ -8,7 +8,19 @@ html(lang="en")
     link.css(rel="stylesheet", href="https://unpkg.com/mvp.css")
   body 
     header
-      h1 Node Zoom
+      h1 Node Chat
     main
+      div#welcome
+        form
+          input#nickname(placeholder="nickname", required, type="text")
+          input#roomname(placeholder="room name", required, type="text")
+          button Enter Room
+      div#chat
+        h3
+        ul
+        form
+          input(placeholder="write a message", required, type="text")
+          button Chat
+
     script(src="/socket.io/socket.io.js")
     script(src="/public/js/app.js")
