@@ -1,17 +1,59 @@
-const socket = new WebSocket(`ws://${window.location.host}`);
+const messageList = document.querySelector("ul");
+const nameForm = document.querySelector("form#nameForm");
+const messageForm = document.querySelector("form#chatForm");
+messageForm.hidden = true;
+const nickname = document.querySelector("input#nameInput");
+const nameBtn = nameForm.querySelector("button#nameBtn");
 
-socket.addEventListener("open", () => {
-  console.log("[socket: frontend] Opened!");
-});
+var socket;
 
-socket.addEventListener("message", (message) => {
-  console.log(
-    "[socket: frontend] '",
-    message.data,
-    "' is arrived from the server."
-  );
-});
+const chatPayload = (chat = null) => {
+  return JSON.stringify({
+    nickname: nickname.value,
+    chat: chat,
+  });
+};
 
-socket.addEventListener("close", () => {
-  console.log("[socket: frontend] Closed!");
-});
+const addChatHistory = (message) => {
+  const li = document.createElement("li");
+  li.innerText = message;
+  messageList.append(li);
+};
+
+const handleNameFormSubmit = (event) => {
+  event.preventDefault();
+  if (!socket) {
+    socket = new WebSocket(`ws://${window.location.host}`);
+    socket.addEventListener("open", () => {
+      console.log("[socket: frontend] Opened!");
+      socket.send(chatPayload());
+      nameBtn.innerHTML = "Save";
+      messageForm.hidden = false;
+    });
+
+    socket.addEventListener("message", (message) => {
+      addChatHistory(message.data);
+    });
+
+    socket.addEventListener("close", () => {
+      console.log("[socket: frontend] Closed!");
+      socket = null;
+      nameBtn.innerHTML = "Enter";
+      messageForm.hidden = true;
+      addChatHistory("Server is Closed.");
+    });
+  } else {
+    socket.send(chatPayload());
+  }
+};
+
+nameForm.addEventListener("submit", handleNameFormSubmit);
+
+const handleSubmit = (event) => {
+  event.preventDefault();
+  const input = messageForm.querySelector("input#chatInput");
+  socket.send(chatPayload(input.value));
+  input.value = "";
+};
+
+messageForm.addEventListener("submit", handleSubmit);

@@ -10,6 +10,11 @@ html(lang="en")
     header
       h1 Node Zoom
     main
-      h2 Welcome to Node-zoom!
-      button Call
+      form(id="nameForm")
+        input(type="text", id="nameInput", placeholder="Write a Nickname", required)
+        button(id="nameBtn") Enter
+      ul
+      form(id="chatForm")
+        input(type="text", id="chatInput", placeholder="Write a Message", required)
+        button(id="chatBtn") Send
     script(src="/public/js/app.js")
