@@ -30,21 +30,23 @@ wss.on("connection", (socket) => {
     const msg = message.toString("utf8");
     console.log(msg);
     const index = socketIdBySocket(socket);
-    const originalNickname = sockets[index]?.nickname;
-    const { nickname, chat } = JSON.parse(msg);
-    if (originalNickname != nickname) {
-      if (index >= 0) {
-        sockets[index].nickname = nickname;
-        broadcastMessage(
-          `${originalNickname}[user#${index}] changed the nickname to ${nickname}`
-        );
-      } else {
-        sockets.push({ nickname: nickname, socket: socket });
-        broadcastMessage(`${nickname}[user#${sockets.length - 1}] connected!`);
-      }
+    const nickname = sockets[index]?.nickname;
+    const { type, payload } = JSON.parse(msg);
+    if (type == "chat") {
+      broadcastMessage(`${nickname}[user#${index}] : ${payload}`);
     }
-    if (chat) {
-      broadcastMessage(`${nickname}[user#${index}] : ${chat}`);
+    if (type == "nickname") {
+      if (nickname != payload) {
+        if (index >= 0) {
+          sockets[index].nickname = payload;
+          broadcastMessage(
+            `${nickname}[user#${index}] Changed the nickname to ${payload}`
+          );
+        } else {
+          sockets.push({ nickname: payload, socket: socket });
+          broadcastMessage(`${payload}[user#${sockets.length - 1}] Connected!`);
+        }
+      }
     }
   });
   socket.on("close", () => {
@@ -52,7 +54,7 @@ wss.on("connection", (socket) => {
     const nickname = sockets[index]?.nickname;
     sockets[index] = null;
     console.log(`[socket: server] ${nickname} closed.`);
-    broadcastMessage(`${nickname}[user#${index}] disconnected.`);
+    broadcastMessage(`${nickname}[user#${index}] Disconnected.`);
   });
 });
 

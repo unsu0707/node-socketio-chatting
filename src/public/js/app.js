@@ -6,12 +6,10 @@ const nickname = document.querySelector("input#nameInput");
 const nameBtn = nameForm.querySelector("button#nameBtn");
 
 var socket;
+var socketId;
 
-const chatPayload = (chat = null) => {
-  return JSON.stringify({
-    nickname: nickname.value,
-    chat: chat,
-  });
+const jsonPayload = (type, payload) => {
+  return JSON.stringify({ type, payload });
 };
 
 const addChatHistory = (message) => {
@@ -26,7 +24,7 @@ const handleNameFormSubmit = (event) => {
     socket = new WebSocket(`ws://${window.location.host}`);
     socket.addEventListener("open", () => {
       console.log("[socket: frontend] Opened!");
-      socket.send(chatPayload());
+      socket.send(jsonPayload("nickname", nickname.value));
       nameBtn.innerHTML = "Save";
       messageForm.hidden = false;
     });
@@ -43,7 +41,7 @@ const handleNameFormSubmit = (event) => {
       addChatHistory("Server is Closed.");
     });
   } else {
-    socket.send(chatPayload());
+    socket.send(jsonPayload("nickname", nickname.value));
   }
 };
 
@@ -52,7 +50,7 @@ nameForm.addEventListener("submit", handleNameFormSubmit);
 const handleSubmit = (event) => {
   event.preventDefault();
   const input = messageForm.querySelector("input#chatInput");
-  socket.send(chatPayload(input.value));
+  socket.send(jsonPayload("chat", input.value));
   input.value = "";
 };
 
