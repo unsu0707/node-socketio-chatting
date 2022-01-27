@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
-import SocketIO from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
+import { Server } from "socket.io";
 
 const app = express();
 
@@ -11,7 +12,16 @@ app.get("/", (_, res) => res.render("home"));
 app.get("/*", (_, res) => res.redirect("/"));
 
 const httpServer = http.createServer(app);
-const io = SocketIO(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(io, {
+  auth: false,
+});
 
 const publicRooms = () => {
   const {
@@ -33,7 +43,6 @@ const userCount = (room) => {
 };
 
 io.on("connection", (socket) => {
-  console.log(socket.id);
   socket.emit("room_change", publicRooms());
   socket.onAny((event) => {
     console.log(`Socket Event : ${event}`);
