@@ -28,16 +28,18 @@ const addChatHistory = (message) => {
   ul.append(li);
 };
 
+const enterRoom = (userCount) => {
+  welcome.hidden = true;
+  chat.hidden = false;
+  const h3 = chat.querySelector("h3");
+  h3.innerText = `Room ${roomName} (${userCount})`;
+};
+
 const handleRoomSubmit = (event) => {
   event.preventDefault();
   roomName = roomForm.querySelector("input#roomname").value;
   nickname = roomForm.querySelector("input#nickname").value;
-  socket.emit("enter_room", roomName, nickname, () => {
-    welcome.hidden = true;
-    chat.hidden = false;
-    const h3 = chat.querySelector("h3");
-    h3.innerText = `Room ${roomName}`;
-  });
+  socket.emit("enter_room", roomName, nickname, enterRoom);
 };
 
 const handleChatSubmit = (event) => {
@@ -55,7 +57,7 @@ socket.on("room_change", (rooms) => {
   ul.innerHTML = "";
   rooms.forEach((room) => {
     const li = document.createElement("li");
-    li.innerText = room;
+    li.innerText = `${room.roomName} (${room.userCount})`;
     ul.append(li);
   });
 });

@@ -20,22 +20,32 @@ const publicRooms = () => {
     },
   } = io;
   const publicRooms = [];
-  rooms.forEach((_, key) => {
+  rooms.forEach((value, key) => {
     if (sids.get(key) === undefined) {
-      publicRooms.push(key);
+      publicRooms.push({ roomName: key, userCount: value.size });
     }
   });
   return publicRooms;
 };
 
+const userCount = (room) => {
+  return io.sockets.adapter.rooms.get(room).size;
+};
+
 io.on("connection", (socket) => {
+  console.log(socket.id);
+  socket.emit("room_change", publicRooms());
   socket.onAny((event) => {
     console.log(`Socket Event : ${event}`);
+  });
+  socket.on("connection", (callback) => {
+    console.log("connected", socket.id);
+    callback(publicRooms());
   });
   socket.on("enter_room", (roomName, nickname, callback) => {
     socket.join(roomName);
     socket.data.nickname = nickname;
-    callback();
+    callback(userCount(roomName));
     socket.to(roomName).emit("get_message", `${socket.data.nickname} Joined`);
     io.sockets.emit("room_change", publicRooms());
   });
