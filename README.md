@@ -1,3 +1,3 @@
-# Node-zoom
+# Node-socketio-chatting
 
-Zoom Clone using NodeJS, WebRTC and WebSockets.
+Chatting Application using NodeJS, SocketIO.

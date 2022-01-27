@@ -1,7 +1,7 @@
 {
-  "name": "zoom",
+  "name": "node-socketio-chatting",
   "version": "1.0.0",
-  "description": "Zoom Clone using NodeJS, WebRTC and WebSockets.",
+  "description": "Chatting Application using NodeJS, SocketIO.",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon"
