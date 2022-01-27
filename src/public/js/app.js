@@ -17,11 +17,6 @@ socket.onAny((event) => {
   console.log(event);
 });
 
-socket.on("count", (message) => {
-  const h3 = chat.querySelector("h3");
-  h3.innerText = `Room ${roomName} (count: ${message.length})`;
-});
-
 socket.on("get_message", (message) => {
   addChatHistory(message);
 });
@@ -54,6 +49,16 @@ const handleChatSubmit = (event) => {
     input.value = "";
   });
 };
+
+socket.on("room_change", (rooms) => {
+  const ul = welcome.querySelector("ul");
+  ul.innerHTML = "";
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerText = room;
+    ul.append(li);
+  });
+});
 
 chatForm.addEventListener("submit", handleChatSubmit);
 roomForm.addEventListener("submit", handleRoomSubmit);

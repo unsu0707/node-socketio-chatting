@@ -28,14 +28,8 @@ const publicRooms = () => {
   return publicRooms;
 };
 
-const RoomUsersCount = (room) => {
-  return [...io.sockets.adapter.rooms.get(room).values()];
-};
-
 io.on("connection", (socket) => {
   socket.onAny((event) => {
-    console.log(publicRooms());
-    publicRooms().forEach((room) => console.log(RoomUsersCount(room).length));
     console.log(`Socket Event : ${event}`);
   });
   socket.on("enter_room", (roomName, nickname, callback) => {
@@ -43,17 +37,18 @@ io.on("connection", (socket) => {
     socket.data.nickname = nickname;
     callback();
     socket.to(roomName).emit("get_message", `${socket.data.nickname} Joined`);
-    socket.to(roomName).emit("count", RoomUsersCount(roomName));
-    socket.emit("count", RoomUsersCount(roomName));
+    io.sockets.emit("room_change", publicRooms());
   });
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => {
-      socket.to(room).emit("get_message", `${socket.data.nickname} Leaved`);
-    });
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("get_message", `${socket.data.nickname} Leaved`)
+    );
+  });
+  socket.on("disconnect", () => {
+    io.sockets.emit("room_change", publicRooms());
   });
   socket.on("send_message", (message, room, callback) => {
     socket.to(room).emit("get_message", `${socket.data.nickname}: ${message}`);
-    socket.to(room).emit("count", RoomUsersCount(room));
     callback();
   });
 });
